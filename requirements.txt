@@ -1,0 +1,16 @@
+distro
+g2o-python
+imageio
+lazy_loader
+networkx
+numpy
+opencv-python
+packaging
+pillow
+PySDL2
+pysdl2-dll
+scikit-build
+scikit-image
+scipy
+tifffile
+pybind11
