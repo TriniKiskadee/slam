@@ -53,7 +53,7 @@ def match_frames(f1, f2):
 
     # Lowe's ratio test
     for m, n in matches:
-        if m.distance < (0.7 * n.distance):
+        if m.distance < (0.75 * n.distance):
             idx1.append(m.queryIdx)
             idx2.append(m.trainIdx)
 
@@ -67,11 +67,13 @@ def match_frames(f1, f2):
     idx2 = np.array(idx2)
 
     # Fit matrix
+    print(f"ret[:, 0] :\n {ret[:, 0].shape}")
+    print(f"ret[:, 1] :\n {ret[:, 1].shape}")
     model, inliers = ransac(
         (ret[:, 0], ret[:, 1]),
         #FundamentalMatrixTransform,
         EssentialMatrixTransform,
-        min_samples=10,
+        min_samples=8,
         residual_threshold=0.005,
         max_trials=100
     )

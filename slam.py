@@ -11,7 +11,7 @@ from frame import Frame, match_frames, denormalize, IRt
 W, H = 1920//2, 1080//2
 
 # Focal length
-F = 270
+F = H
 # Intrinsic matrix
 K = np.array(
     [
@@ -21,8 +21,19 @@ K = np.array(
     ]
 )
 
+# Global mapp
+frames = []
+points = []
+
 # Main classes
 display = Display(W, H)
+
+
+def display_map():
+    for f in frames:
+        print(f.pose)
+    for p in points:
+        print(p.location)
 
 
 class Point(object):
@@ -33,6 +44,7 @@ class Point(object):
         self.location = location
         self.frames = []
         self.idxs = []
+        points.append(self)
 
     def add_observation(self, frame, idx):
         self.frames.append(frame)
@@ -41,9 +53,6 @@ class Point(object):
 
 def triangulate(pose1, pose2, pts1, pts2):
     return cv2.triangulatePoints(pose1[:3], pose2[:3], pts1.T, pts2.T).T
-
-
-frames = []
 
 
 def process_frame(image):
