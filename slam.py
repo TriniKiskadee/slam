@@ -1,6 +1,11 @@
+import sys
+
 import cv2
 import numpy as np
+
 import g2o
+import pypangolin as pangolin
+import OpenGL as gl
 
 from display import Display
 from frame import Frame, match_frames, denormalize, IRt
@@ -28,10 +33,28 @@ class Map(object):
         self.points = []
         self.points.append(self)
 
+    def viewer_thread(self):
+        pangolin.CreateWindowAndBind(window_title="Main", w=W, h=H)
+        gl.glEnable(gl.GL_DEPTH_TEST)
+
+        # Define Projection and initial ModelView matrix
+        scam = pangolin.OpenGlRenderState(
+            pangolin.ProjectionMatrix(640, 480, 420, 420, 320, 240, 0.2, 100),
+            pangolin.ModelViewLookAt(-2, 2, -2, 0, 0, 0, pangolin.AxisDirection.AxisY)
+        )
+        handler = pangolin.Handler3D(scam)
+
+        # Create interactive view in window
+        dcam = pangolin.CreateDisplay()
+        dcam.SetBounds(0.0, 1.0, 0.0, 1.0, -640.0/480.0)
+        dcam.SetHandler(handler)
+
     def display(self):
+        poses, pts = [], []
         for f in self.frames:
-            print(f.id)
-            print(f.pose)
+            poses.append(f.pose)
+        for p in self.points:
+            pts.append(p.location)
 
 
 # Main classes

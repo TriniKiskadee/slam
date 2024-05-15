@@ -21,3 +21,15 @@ Solution: [StackOverflow](https://stackoverflow.com/questions/72110384/libgl-err
 ```console
 conda install -c conda-forge libstdcxx-ng
 ```
+
+### `GLIBCXX_3.4.32' not found
+Error: 
+```console
+ImportError: /home/runie/.conda/envs/slam/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.32' not found (required by /home/runie/.conda/envs/slam/lib/python3.9/site-packages/pypangolin.cpython-39-x86_64-linux-gnu.so)
+```
+
+Solution: [StackOverflow](https://askubuntu.com/questions/1418016/glibcxx-3-4-30-not-found-in-conda-environment)
+```console
+ln -sf /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /home/anavani/anaconda3/envs/dmcgb/bin/../lib/libstdc++.so.6
+ln -sf /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 /home/runie/.conda/envs/slam/bin/../lib/libgcc_s.so.1
+```

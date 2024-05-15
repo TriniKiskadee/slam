@@ -1,16 +1,21 @@
-distro
-g2o-python
-imageio
-lazy_loader
-networkx
-numpy
-opencv-python
-packaging
-pillow
-PySDL2
-pysdl2-dll
-scikit-build
-scikit-image
-scipy
-tifffile
-pybind11
+distro==1.9.0
+g2o-python==0.0.12
+imageio==2.34.1
+lazy_loader @ file:///croot/lazy_loader_1695850097191/work
+networkx==3.2.1
+numpy==1.26.4
+opencv-python==4.9.0.80
+packaging==24.0
+pillow==10.3.0
+pybind11==2.12.0
+pybind11-global @ file:///croot/pybind11-split_1712163739614/work
+PyOpenGL==3.1.7
+PyOpenGL-accelerate==3.1.7
+pypangolin @ file:///home/runie/Desktop/Code/open3d/build/Pangolin/build/pypangolin-0.9.1-cp39-cp39-linux_x86_64.whl#sha256=289ab419a50ee8c2b35fe135c269cc4b46661fb045a8d154f4c6e1078550253a
+PySDL2==0.9.16
+pysdl2-dll==2.30.2
+scikit-build==0.17.6
+scikit-image==0.22.0
+scipy==1.13.0
+tifffile==2024.5.10
+tomli==2.0.1
