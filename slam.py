@@ -32,10 +32,19 @@ class Map(object):
     def __init__(self):
         self.frames = []
         self.points = []
+        self.state = None
+        self.q = Queue()
+        p = Process(target=self.viewer_thread, args=(self.q, ))
+        p.daemon = True
+        p.start()
+
+    def viewer_thread(self, q):
         self.viewer_init()
+        while 1:
+            self.viewer_refresh(q)
 
     def viewer_init(self):
-        pangolin.CreateWindowAndBind("SLAM", 640, 480)
+        pangolin.CreateWindowAndBind("SLAM Map", 640, 480)
         gl.glEnable(gl.GL_DEPTH_TEST)
 
         # Define Projection and initial ModelView matrix
@@ -56,11 +65,13 @@ class Map(object):
         )
         self.dcam.SetHandler(self.handler)
 
-    def viewer_refresh(self):
+    def viewer_refresh(self, q):
+        if self.state is None or not q.empty():
+            self.state = q.get()
+
         # Turn state into points
         ppts = np.array([d[:3, 3] for d in self.state[0]])
         spts = np.array(self.state[1])
-        print(f"ppts: {ppts.shape}\nspts: {spts.shape}")
 
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         gl.glClearColor(1.0, 1.0, 1.0, 1.0)
@@ -82,9 +93,7 @@ class Map(object):
             poses.append(f.pose)
         for p in self.points:
             pts.append(p.pt)
-        self.state = poses, pts
-        self.viewer_refresh()
-
+        self.q.put((poses, pts))
 
 # Main classes
 # display = Display(W, H)
