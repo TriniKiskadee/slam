@@ -67,8 +67,8 @@ def match_frames(f1, f2):
     idx2 = np.array(idx2)
 
     # Fit matrix
-    print(f"ret[:, 0] :\n {ret[:, 0].shape}")
-    print(f"ret[:, 1] :\n {ret[:, 1].shape}")
+    # print(f"ret[:, 0] :\n {ret[:, 0].shape}")
+    # print(f"ret[:, 1] :\n {ret[:, 1].shape}")
     model, inliers = ransac(
         (ret[:, 0], ret[:, 1]),
         #FundamentalMatrixTransform,
@@ -105,10 +105,13 @@ def extract(image):
 
 
 class Frame(object):
-    def __init__(self, image, K):
+    def __init__(self, mapp, image, K):
         self.K = K
         self.K_inv = np.linalg.inv(self.K)
         self.pose = IRt
 
         points, self.descriptors = extract(image)
         self.points = normalize(self.K_inv, points)
+
+        self.id = len(mapp.frames)
+        mapp.frames.append(self)

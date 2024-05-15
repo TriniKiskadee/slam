@@ -21,30 +21,36 @@ K = np.array(
     ]
 )
 
-# Global mapp
-frames = []
-points = []
+
+class Map(object):
+    def __init__(self):
+        self.frames = []
+        self.points = []
+        self.points.append(self)
+
+    def display(self):
+        for f in self.frames:
+            print(f.id)
+            print(f.pose)
+
 
 # Main classes
 display = Display(W, H)
-
-
-def display_map():
-    for f in frames:
-        print(f.pose)
-    for p in points:
-        print(p.location)
+mapp = Map()
 
 
 class Point(object):
     """
-    A Point is a 3-D position in the video. Each point is observed in multiple frames
+    A Point is a 3-D position in space (x, y, z) the video. Each point is observed in multiple frames
     """
-    def __init__(self, location):
+    def __init__(self, mapp, location):
         self.location = location
         self.frames = []
         self.idxs = []
-        points.append(self)
+
+        self.id = len(mapp.points)
+        mapp.points.append(self)
+
 
     def add_observation(self, frame, idx):
         self.frames.append(frame)
@@ -57,16 +63,17 @@ def triangulate(pose1, pose2, pts1, pts2):
 
 def process_frame(image):
     image = cv2.resize(image, (W, H))
-    frame = Frame(image, K)
-    frames.append(frame)
-    if len(frames) <= 1:
+    frame = Frame(mapp, image, K)
+    if frame.id == 0:
         return
 
-    idx1, idx2, Rt = match_frames(frames[-1], frames[-2])
-    frames[-1].pose = np.dot(Rt, frames[-2].pose)
+    f1, f2 = mapp.frames[-1], mapp.frames[-2]
+
+    idx1, idx2, Rt = match_frames(f1, f2)
+    f1.pose = np.dot(Rt, f2.pose)
 
     # Homogenous 3-D coordinates
-    pts4d = triangulate(frames[-1].pose, frames[-2].pose, frames[-1].points[idx1], frames[-2].points[idx2])
+    pts4d = triangulate(f1.pose, f2.pose, f1.points[idx1], f2.points[idx2])
     pts4d /= pts4d[:, 3:]
 
     # Reject points without enough "parallax" and points behind the camera (z coordinate < 0)
@@ -77,14 +84,15 @@ def process_frame(image):
     for i, p in enumerate(pts4d):
         if not good_pts4d[i]:
             continue
-        pt = Point(p)
-        pt.add_observation(frames[-1], idx1[i])
-        pt.add_observation(frames[-2], idx2[i])
+        pt = Point(mapp, p)
+        pt.add_observation(f1, idx1[i])
+        pt.add_observation(f2, idx2[i])
 
-    for pt1, pt2 in zip(frames[-1].points[idx1], frames[-2].points[idx2]):
+    for pt1, pt2 in zip(f1.points[idx1], f2.points[idx2]):
         u1, v1 = denormalize(K, pt1)
         u2, v2 = denormalize(K, pt2)
         cv2.circle(image, (u1, v1), radius=3, color=(0, 255, 0))
         cv2.line(image, (u1, v1), (u2, v2), (255, 0, 0))
 
     display.paint(image)
+    mapp.display()
