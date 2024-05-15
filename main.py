@@ -21,7 +21,8 @@ def main(file: str) -> None:
         else:
             break
 
-    cv2.release()
+    print(f"Releasing {cap.getBackendName()} and destroying all windows")
+    cap.release()
     cv2.destroyAllWindows()
 
 
