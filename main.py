@@ -21,17 +21,17 @@ def main(file: str) -> None:
         else:
             break
 
-    print(f"Releasing {cap.getBackendName()} and destroying all windows")
+    print(f"Releasing video capture and destroying all windows")
     cap.release()
     cv2.destroyAllWindows()
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    vid = "./test_vids/001.mp4"
+    vid = "./test_vids/test_countryroad.mp4"
     if not os.path.isfile(vid):
         raise FileNotFoundError
 
     main(file=vid)
 
-# TODO: 05:14:44
+# TODO: 05:34:00

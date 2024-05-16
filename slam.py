@@ -9,7 +9,7 @@ import pypangolin as pangolin
 import OpenGL.GL as gl
 
 from display import Display
-from frame import Frame, match_frames, denormalize, IRt
+from frame import Frame, match_frames, denormalize
 
 
 # Camera intrinsics
@@ -26,6 +26,7 @@ K = np.array(
         [0, 0, 1]
     ]
 )
+K_inv = np.linalg.inv(K)
 
 
 class Map(object):
@@ -39,20 +40,22 @@ class Map(object):
         p.start()
 
     def viewer_thread(self, q):
-        self.viewer_init()
+        self.viewer_init(w=1024, h=768)
         while 1:
             self.viewer_refresh(q)
 
-    def viewer_init(self):
-        pangolin.CreateWindowAndBind("SLAM Map", 640, 480)
+    def viewer_init(self, w, h):
+        pangolin.CreateWindowAndBind("SLAM Map", w, h, )
         gl.glEnable(gl.GL_DEPTH_TEST)
 
         # Define Projection and initial ModelView matrix
         self.scam = pangolin.OpenGlRenderState(
-            pangolin.ProjectionMatrix(640, 480, 420, 420, 320, 240, 0.2, 100),
-            pangolin.ModelViewLookAt(-2, 2, -2, 0, 0, 0, pangolin.AxisDirection.AxisY)
+            pangolin.ProjectionMatrix(w, h, 420, 420, w//2, h//2, 0.2, 1000),
+            pangolin.ModelViewLookAt(0, -10, -20,
+                                     0, 0, 0,
+                                     0, -1, 0)
         )
-        self.handler = pangolin.Handler3D(self.scam, enforce_up=pangolin.AxisY)
+        self.handler = pangolin.Handler3D(self.scam)
 
         # Create interactive view in window
         self.dcam = pangolin.CreateDisplay()
@@ -61,7 +64,7 @@ class Map(object):
             pangolin.Attach(1.0),
             pangolin.Attach(0.0),
             pangolin.Attach(1.0),
-            -640.0/480.0
+            -w/h
         )
         self.dcam.SetHandler(self.handler)
 
@@ -69,21 +72,20 @@ class Map(object):
         if self.state is None or not q.empty():
             self.state = q.get()
 
-        # Turn state into points
-        ppts = np.array([d[:3, 3] for d in self.state[0]])
-        spts = np.array(self.state[1])
-
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
         gl.glClearColor(1.0, 1.0, 1.0, 1.0)
         self.dcam.Activate(self.scam)
 
+        # Draw poses
         gl.glPointSize(10)
         gl.glColor3f(0.0, 1.0, 0.0)
+        ppts = [p[:3, 3] for p in self.state[0]]
         pangolin.glDrawPoints(ppts)
 
-        # gl.glPointSize(2)
-        # gl.glColor3f(0.0, 1.0, 0.0)
-        # pangolin.glDrawPoints(spts)
+        # Draw keypoints
+        gl.glPointSize(2)
+        gl.glColor3f(1.0, 0.3, 0.0)
+        pangolin.glDrawPoints(self.state[1][:, :3])
 
         pangolin.FinishFrame()
 
@@ -93,11 +95,12 @@ class Map(object):
             poses.append(f.pose)
         for p in self.points:
             pts.append(p.pt)
-        self.q.put((poses, pts))
+        self.q.put((np.array(poses), np.array(pts)))
+
 
 # Main classes
-# display = Display(W, H)
 mapp = Map()
+display = Display(W, H)
 
 
 class Point(object):
@@ -154,5 +157,7 @@ def process_frame(image):
         cv2.circle(image, (u1, v1), radius=3, color=(0, 255, 0))
         cv2.line(image, (u1, v1), (u2, v2), (255, 0, 0))
 
-    #display.paint(image)
+    # Video display
+    display.paint(image)
+    # 3-D map display
     mapp.display()
