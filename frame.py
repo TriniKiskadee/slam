@@ -97,7 +97,7 @@ def extract(image):
     # Feature Detection
     points = cv2.goodFeaturesToTrack(
         np.mean(image, axis=2).astype(np.uint8),
-        maxCorners=3000,
+        maxCorners=1000,
         qualityLevel=0.01,
         minDistance=3
     )
