@@ -1,5 +1,16 @@
 # Simultaneous Localization and Mapping (SLAM)
 
+## PC
+- Ubuntu 24.04 (Kernel Ubuntu 6.8.0-31.31-generic 6.8.1)
+- i5-4690K
+- 32Gb RAM
+
+## Technology Used
+- Python 3.9
+- CMake
+- [Pangolin](https://github.com/stevenlovegrove/Pangolin)
+- [G2OPY](https://github.com/uoip/g2opy)
+
 ## Major Errors and Fixes
 ### MESA-LOADER: failed to open iris
 Error:

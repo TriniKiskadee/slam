@@ -1,8 +1,9 @@
+from multiprocessing import Process, Queue
 import numpy as np
 
-from multiprocessing import Process, Queue
-import pypangolin as pangolin
 import OpenGL.GL as gl
+import g2o
+import pypangolin as pangolin
 
 
 class Point(object):
@@ -18,6 +19,7 @@ class Point(object):
         mapp.points.append(self)
 
     def add_observation(self, frame, idx):
+        frame.pts[idx] = self
         self.frames.append(frame)
         self.idxs.append(idx)
 
@@ -27,10 +29,46 @@ class Map(object):
         self.frames = []
         self.points = []
         self.state = None
+        self.q = None
+
+    # Optimizer
+    def optimizer(self):
+        # init optimizer
+        opt = g2o.SparseOptimizer()
+        solver = g2o.BlockSolverSE3(g2o.LinearSolverCholmodSE3())
+        solver = g2o.OptimizationAlgorithmLevenberg(solver)
+        opt.set_algorithm(solver)
+
+        robust_kernel = g2o.RobustKernelHuber(np.sqrt(5.991))
+
+        # Add frames to graph
+        for f in self.frames:
+            v_se3 = g2o.VertexSE3()
+            v_se3.set_id(f.id)
+            v_se3.set_estimate(f.pose)
+            v_se3.set_fixed(False)
+            opt.add_vertex(v_se3)
+
+        # Add points to frames
+        edge_count = 0x10000
+        for p in self.points:
+            for f in p.frames:
+                edge = g2o.EdgeSE3()
+                edge.set_vertex(edge_count, opt.vertex(f.id))
+                edge.set_measurement(p.pt)
+                edge.set_information(np.eye(6))
+                edge.set_robust_kernel(robust_kernel)
+                opt.add_edge(edge)
+                edge_count += 1
+
+        opt.optimize(20)
+
+    # Viewer
+    def create_viewer(self):
         self.q = Queue()
-        p = Process(target=self.viewer_thread, args=(self.q, ))
-        p.daemon = True
-        p.start()
+        self.vt = Process(target=self.viewer_thread, args=(self.q,))
+        self.vt.daemon = True
+        self.vt.start()
 
     def viewer_thread(self, q):
         self.viewer_init(w=1024, h=768)
@@ -38,15 +76,17 @@ class Map(object):
             self.viewer_refresh(q)
 
     def viewer_init(self, w, h):
-        pangolin.CreateWindowAndBind("SLAM Map", w, h, )
+        pangolin.CreateWindowAndBind("SLAM Map", w, h)
         gl.glEnable(gl.GL_DEPTH_TEST)
 
         # Define Projection and initial ModelView matrix
         self.scam = pangolin.OpenGlRenderState(
-            pangolin.ProjectionMatrix(w, h, 420, 420, w//2, h//2, 0.2, 1000),
-            pangolin.ModelViewLookAt(0, -10, -20,
-                                     0, 0, 0,
-                                     0, -1, 0)
+            pangolin.ProjectionMatrix(w, h, 420, 420, w//2, h//2, 0.2, 10000),
+            pangolin.ModelViewLookAt(
+                0, -10, -8,
+                0, 0, 0,
+                0, -1, 0
+            )
         )
         self.handler = pangolin.Handler3D(self.scam)
 
@@ -57,7 +97,7 @@ class Map(object):
             pangolin.Attach(1.0),
             pangolin.Attach(0.0),
             pangolin.Attach(1.0),
-            -w/h
+            w/h
         )
         self.dcam.SetHandler(self.handler)
 
@@ -77,12 +117,15 @@ class Map(object):
 
         # Draw keypoints
         gl.glPointSize(2)
-        gl.glColor3f(1.0, 0.3, 0.0)
+        gl.glColor3f(1.0, 0.0, 0.0)
         pangolin.glDrawPoints(self.state[1][:, :3])
 
         pangolin.FinishFrame()
 
     def display(self):
+        if self.q is None:
+            return
+
         poses, pts = [], []
         for f in self.frames:
             poses.append(f.pose)

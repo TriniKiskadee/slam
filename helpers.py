@@ -3,9 +3,9 @@ import numpy as np
 
 
 # Pose
-def extract_pose(E):
+def extract_pose(F):
     W = np.mat([[0, -1, 0],[1, 0, 0],[0, 0, 1]], dtype=float)
-    U, d, Vt = np.linalg.svd(E)
+    U, d, Vt = np.linalg.svd(F)
     assert np.linalg.det(U) >= 0
     if np.linalg.det(U) < 0:
         U *= -1.0

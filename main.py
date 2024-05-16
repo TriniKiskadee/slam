@@ -29,11 +29,11 @@ def main(file: str) -> None:
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    vid = "./test_vids/test_drone.mp4"
+    vid = "./test_vids/test_ohio.mp4"
     if not os.path.isfile(vid):
         raise FileNotFoundError
 
     main(file=vid)
 
-# TODO: 05:59:00
+# TODO: 07:14:00
 

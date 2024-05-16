@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from skimage.measure import ransac
-from skimage.transform import EssentialMatrixTransform
+from skimage.transform import EssentialMatrixTransform, FundamentalMatrixTransform
 
 from helpers import extract_pose, normalize
 
@@ -81,9 +81,10 @@ def match_frames(f1, f2):
     # Fit matrix
     model, inliers = ransac(
         (ret[:, 0], ret[:, 1]),
-        EssentialMatrixTransform,
+        # EssentialMatrixTransform,
+        FundamentalMatrixTransform,
         min_samples=8,
-        residual_threshold=0.02,
+        residual_threshold=0.005,
         max_trials=100,
     )
 
@@ -99,7 +100,7 @@ def extract(image):
         np.mean(image, axis=2).astype(np.uint8),
         maxCorners=1000,
         qualityLevel=0.01,
-        minDistance=3
+        minDistance=10
     )
 
     # Feature Extraction
@@ -115,9 +116,12 @@ class Frame(object):
         self.K = K
         self.K_inv = np.linalg.inv(self.K)
         self.pose = np.eye(4)
+        self.h, self.w = image.shape[0:2]
 
-        points, self.descriptors = extract(image)
-        self.points = normalize(self.K_inv, points)
+        self.points, self.descriptors = extract(image)
+        self.points = normalize(self.K_inv, self.points)
+        self.pts = [None]*len(self.points)
 
         self.id = len(mapp.frames)
         mapp.frames.append(self)
+

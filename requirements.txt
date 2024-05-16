@@ -1,5 +1,4 @@
 distro==1.9.0
-g2o-python==0.0.12
 imageio==2.34.1
 lazy_loader @ file:///croot/lazy_loader_1695850097191/work
 networkx==3.2.1
@@ -12,6 +11,7 @@ pybind11-global @ file:///croot/pybind11-split_1712163739614/work
 PyOpenGL==3.1.7
 PyOpenGL-accelerate==3.1.7
 pypangolin @ file:///home/runie/Desktop/Code/open3d/build/Pangolin/build/pypangolin-0.9.1-cp39-cp39-linux_x86_64.whl#sha256=289ab419a50ee8c2b35fe135c269cc4b46661fb045a8d154f4c6e1078550253a
+g2opy @ file:///home/runie/Desktop/Code/open3d/build/g2o.cpython-36m-x86_64-linux-gnu.so
 PySDL2==0.9.16
 pysdl2-dll==2.30.2
 scikit-build==0.17.6
