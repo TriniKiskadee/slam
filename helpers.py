@@ -1,7 +1,6 @@
 import os
 import numpy as np
 
-
 # Pose
 def extract_pose(F):
     W = np.mat([[0, -1, 0],[1, 0, 0],[0, 0, 1]], dtype=float)

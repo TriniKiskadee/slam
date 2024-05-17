@@ -33,9 +33,9 @@ class Map(object):
 
     # Optimizer
     def optimizer(self):
-        # init optimizer
+        # init g2o optimizer
         opt = g2o.SparseOptimizer()
-        solver = g2o.BlockSolverSE3(g2o.LinearSolverCholmodSE3())
+        solver = g2o.BlockSolverSE3(g2o.LinearSolverEigenSE3())
         solver = g2o.OptimizationAlgorithmLevenberg(solver)
         opt.set_algorithm(solver)
 
@@ -43,23 +43,30 @@ class Map(object):
 
         # Add frames to graph
         for f in self.frames:
-            v_se3 = g2o.VertexSE3()
+            v_se3 = g2o.VertexSE3Expmap()
             v_se3.set_id(f.id)
-            v_se3.set_estimate(f.pose)
-            v_se3.set_fixed(False)
+            v_se3.set_estimate(g2o.SE3Quat(f.pose[0:3, 0:3], f.pose[3, 0:3]))
+            v_se3.set_fixed(f.id == 0)
             opt.add_vertex(v_se3)
 
         # Add points to frames
-        edge_count = 0x10000
         for p in self.points:
+            pt = g2o.BaseFixedSizedEdge_3_Vector3_VertexSBAPointXYZ_VertexSCam()
+
+            pt.set_id(p.id + 0x10000)
+            pt.set_estimate(p.pt[0:3])
+            pt.set_marginalized(True)
+            opt.add_vertex(pt)
+
             for f in p.frames:
-                edge = g2o.EdgeSE3()
-                edge.set_vertex(edge_count, opt.vertex(f.id))
-                edge.set_measurement(p.pt)
-                edge.set_information(np.eye(6))
+                edge = g2o.EdgeSE3ProjectXYZ()
+                edge.set_vertex(0, pt)
+                edge.set_vertex(1, opt.vertex(f.id))
+                edge.set_measurement(f.kps[f.pts.index(p)])
+                edge.set_information(np.eye(2))
                 edge.set_robust_kernel(robust_kernel)
                 opt.add_edge(edge)
-                edge_count += 1
+                # edge_id += 1
 
         opt.optimize(20)
 

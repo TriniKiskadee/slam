@@ -90,7 +90,7 @@ def process_frame(image):
     display.paint(image) if display is not None else None
 
     # optimizer
-    if frame.id > 3:
+    if frame.id >= 3:
         mapp.optimizer()
 
     # 3-D map display
